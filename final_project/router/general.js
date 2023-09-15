@@ -30,34 +30,42 @@ public_users.post("/register", (req,res) => {
 
   // You might want to save the new user object to your database here.
 
-  return res.status(201).json({ message: "User registered successfully." });
+  return res.status(201).json({ message: "Customer Successfully registered. Now you can login" });
 });
 
 // Get the book list available in the shop
 public_users.get('/', async function (req, res) {
   // Get the list of books
-  const bookList = await books.values();
+  try {
+    const bookList = await Object.values(books);
 
   // Convert the book list to a JSON string
-  const bookListJSON = JSON.stringify(bookList);
 
-  return res.status(200).json(bookListJSON);
-});
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn', async function (req, res) {
-  try {
-    const isbn = req.params.isbn;
-
-    if (books.hasOwnProperty(isbn)) {
-      const bookDetails = books[isbn];
-      return res.status(200).json(bookDetails);
-    } else {
-      return res.status(404).json({ message: "Book not found" });
-    }
+  return res.status(200).json(bookList);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
+  
+});
+// Get book details based on ISBN
+public_users.get('/isbn/:isbn', function (req, res) {
+  const isbn = req.params.isbn;
+
+  new Promise((resolve, reject) => {
+    if (books.hasOwnProperty(isbn)) {
+      resolve(books[isbn]);
+    } else {
+      reject({ message: "Book not found" });
+    }
+  })
+  .then(bookDetails => {
+    return res.status(200).json(bookDetails);
+  })
+  .catch(error => {
+    console.error(error);
+    return res.status(404).json(error);
+  });
 });
 // Get book details based on author
 public_users.get('/author/:author', async function (req, res) {
@@ -95,8 +103,11 @@ public_users.get('/author/:author', async function (req, res) {
 public_users.get('/title/:title', async function (req, res) {
   const { title } = req.params;
 
-  // Find the book based on the provided title
-  const matchingBooks = await books.filter(async book => {
+  // Convert the books object into an array of book objects
+  const bookList = Object.values(books);
+
+  // Filter the books based on the provided title
+  const matchingBooks = bookList.filter(book => {
     return book.title.toLowerCase().includes(title.toLowerCase());
   });
 

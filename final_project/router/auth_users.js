@@ -36,9 +36,10 @@ regd_users.post("/login", (req,res) => {
   // If credentials are valid, generate a JSON Web Token (JWT) for the session
   const secretKey = "your_secret_key"; // Replace this with your own secret key
   const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
+   req.session.accessToken = token;
 
   // Return the token as a response
-  return res.status(200).json({ token });
+  return res.status(200).json( { message: "Customer Successfully loged In.", token } );
 });
 
 
@@ -68,7 +69,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   } else {
     // If the user hasn't reviewed the book, add a new review
     book.reviews[username] = review;
-    return res.status(201).json({ message: "Review added successfully." });
+    return res.status(201).json({ message: `The review for the book with ISBN ${isbn} has been added/updated.` });
   }
 });
 const findBookByISBN = (isbn) => {
@@ -90,7 +91,7 @@ regd_users.delete("/auth/review/:isbn", (req, res) => {
   if (book.reviews.hasOwnProperty(username)) {
     // If the user has reviewed the book, delete their review
     delete book.reviews[username];
-    return res.status(200).json({ message: "Review deleted successfully." });
+    return res.status(200).json({ message: `The review for ISBN ${isbn} posted by the user ${username} deleted `});
   } else {
     return res.status(404).json({ message: "Review not found. You can only delete your own reviews." });
   }
